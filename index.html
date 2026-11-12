@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finn – Lost & Found Concierge (Demo)</title>
+  <title>Finn – AI Lost & Found Airport Concierge</title>
+  <meta name="description" content="An AI chat agent that finds, verifies and returns lost items — built with Retell AI, Google Apps Script and Cal.com." />
+
+  <!-- Retell chat widget: replace the two placeholders -->
   <script
     id="retell-widget"
     src="https://dashboard.retellai.com/retell-widget-v2.js"
@@ -15,31 +18,240 @@
     data-color="#1e3a8a"
     data-popup-message="Hi! I'm Finn. Lost something at the airport? I can help."
   ></script>
+
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 60px auto; padding: 0 20px; color: #1f2937; line-height: 1.6; }
-    h1 { margin-bottom: 4px; }
-    .tag { color: #6b7280; margin-top: 0; }
-    .card { background: #f3f4f6; border-radius: 10px; padding: 16px 20px; margin: 20px 0; }
-    code { background: #e5e7eb; padding: 2px 6px; border-radius: 4px; }
+    :root {
+      --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc;
+      --brand: #1e3a8a; --brand-soft: #e0e7ff; --ok: #047857; --ok-soft: #d1fae5;
+      --warn: #b45309; --warn-soft: #fef3c7; --bad: #b91c1c; --bad-soft: #fee2e2;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: #fff; line-height: 1.6; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    header { position: relative; overflow: hidden; color: #fff; padding: 72px 0 64px;
+      background:
+        linear-gradient(120deg, rgba(15,23,42,.88) 0%, rgba(30,58,138,.78) 55%, rgba(30,58,138,.45) 100%),
+        url('hero.jpg') center/cover no-repeat,
+        linear-gradient(135deg, #1e3a8a, #3b5bdb); }
+    header .wrap { position: relative; z-index: 1; }
+    .hero-art { position: absolute; right: -40px; top: 50%; transform: translateY(-50%); width: 460px; max-width: 55%; opacity: .9; pointer-events: none; }
+    .plane { animation: fly 9s ease-in-out infinite; transform-origin: center; }
+    @keyframes fly { 0%,100% { transform: translate(0,0) rotate(-8deg); } 50% { transform: translate(18px,-10px) rotate(-6deg); } }
+    @media (prefers-reduced-motion: reduce) { .plane { animation: none; } }
+    @media (max-width: 760px) { .hero-art { display: none; } }
+    header h1 { font-size: 2.4rem; margin: 0 0 8px; letter-spacing: -0.02em; max-width: 600px; }
+    header p { font-size: 1.15rem; margin: 0; opacity: .92; max-width: 560px; }
+    .cta { display: inline-block; margin-top: 24px; background: #fff; color: var(--brand); padding: 10px 18px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+    .pills { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill { font-size: .8rem; background: rgba(255,255,255,.16); padding: 4px 10px; border-radius: 999px; }
+    nav { position: sticky; top: 0; background: #fff; border-bottom: 1px solid var(--line); z-index: 5; }
+    nav .wrap { display: flex; gap: 20px; overflow-x: auto; padding-top: 12px; padding-bottom: 12px; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .92rem; white-space: nowrap; }
+    nav a:hover { color: var(--brand); }
+    section { padding: 48px 0; border-bottom: 1px solid var(--line); }
+    section:nth-of-type(even) { background: var(--bg); }
+    h2 { font-size: 1.6rem; margin: 0 0 8px; letter-spacing: -0.01em; }
+    .lead { color: var(--muted); margin: 0 0 24px; max-width: 720px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+    .card h3 { margin: 0 0 6px; font-size: 1.02rem; }
+    .card p { margin: 0; color: var(--muted); font-size: .94rem; }
+    .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 8px 0 24px; }
+    .step { flex: 1 1 0; min-width: 112px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px; text-align: center; position: relative; }
+    .step b { display: block; font-size: .92rem; }
+    .step span { font-size: .8rem; color: var(--muted); }
+    .step .n { display: inline-block; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; background: var(--brand); color: #fff; font-size: .75rem; margin-bottom: 6px; }
+    .arch { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .arch .card { border-top: 4px solid var(--brand); }
+    table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: .92rem; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: #f1f5f9; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    tr:last-child td { border-bottom: none; }
+    code { background: #eef2ff; color: #1e3a8a; padding: 1px 6px; border-radius: 4px; font-size: .88em; }
+    .tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+    .t-ok { background: var(--ok-soft); color: var(--ok); }
+    .t-warn { background: var(--warn-soft); color: var(--warn); }
+    .t-bad { background: var(--bad-soft); color: var(--bad); }
+    .script { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+    .script ol { margin: 0; padding-left: 20px; }
+    .script li { margin: 6px 0; }
+    .say { background: var(--brand-soft); padding: 1px 6px; border-radius: 4px; }
+    .note { background: var(--warn-soft); border-left: 4px solid var(--warn); padding: 12px 16px; border-radius: 8px; font-size: .92rem; margin-top: 20px; }
+    footer { padding: 32px 0 80px; color: var(--muted); font-size: .88rem; }
+    @media (max-width: 600px) { header h1 { font-size: 1.8rem; } th:nth-child(3), td:nth-child(3) { display: none; } }
   </style>
 </head>
 <body>
-  <h1>Finn — Lost & Found Concierge</h1>
-  <p class="tag">AI chat agent prototype · Retell AI · Google Apps Script · Cal.com</p>
 
-  <p>Click the <strong>"Lost something?"</strong> button (bottom-right) to report a lost item. Finn searches found items, verifies ownership, and books a pickup.</p>
-
-  <div class="card">
-    <strong>Try this:</strong><br />
-    1. Say: <code>I lost my black iPhone near gate B12 yesterday, clear case</code><br />
-    2. When asked the verification question, answer: <code>golden retriever</code><br />
-    3. Pick a pickup slot and enter your name + email.
+<header>
+  <svg class="hero-art" viewBox="0 0 460 320" aria-hidden="true">
+    <!-- departure board -->
+    <rect x="150" y="30" width="270" height="150" rx="10" fill="#0b1226" stroke="rgba(255,255,255,.25)"/>
+    <text x="168" y="58" fill="#fbbf24" font-family="monospace" font-size="13" letter-spacing="2">LOST &amp; FOUND</text>
+    <g font-family="monospace" font-size="12" fill="#e2e8f0">
+      <text x="168" y="86">BAG      B12   FOUND</text>
+      <text x="168" y="108">PHONE    E8    VERIFY</text>
+      <text x="168" y="130">PASSPORT F     PICKUP</text>
+      <text x="168" y="152">AIRPODS  T     FOUND</text>
+    </g>
+    <!-- suitcase with tag -->
+    <g transform="translate(40,170)">
+      <rect x="0" y="20" width="120" height="110" rx="14" fill="#f59e0b"/>
+      <rect x="40" y="0" width="40" height="26" rx="8" fill="none" stroke="#f59e0b" stroke-width="8"/>
+      <line x1="30" y1="20" x2="30" y2="130" stroke="#d97706" stroke-width="6"/>
+      <line x1="90" y1="20" x2="90" y2="130" stroke="#d97706" stroke-width="6"/>
+      <circle cx="25" cy="136" r="7" fill="#1f2937"/><circle cx="95" cy="136" r="7" fill="#1f2937"/>
+      <path d="M120 50 L150 64" stroke="#fff" stroke-width="2"/>
+      <rect x="148" y="56" width="46" height="26" rx="4" fill="#fff" transform="rotate(14 171 69)"/>
+      <text x="154" y="75" font-family="monospace" font-size="10" fill="#1e3a8a" transform="rotate(14 171 69)">LF-01</text>
+    </g>
+    <!-- plane -->
+    <g transform="translate(250,230)"><g class="plane">
+      <path d="M0 18 L120 10 Q138 9 140 16 Q138 23 120 22 L0 26 Z" fill="#fff"/>
+      <path d="M60 14 L30 -22 L46 -22 L84 13 Z" fill="#c7d2fe"/>
+      <path d="M60 22 L34 52 L50 52 L84 23 Z" fill="#c7d2fe"/>
+      <path d="M6 18 L-6 0 L6 0 L20 17 Z" fill="#c7d2fe"/>
+    </g></g>
+  </svg>
+  <div class="wrap">
+    <h1>Finn – AI Lost &amp; Found Airport Concierge</h1>
+    <p>A prototype chat assistant for an airport lost &amp; found desk. Simply describe what you misplaced, and Finn will check the found-items list, confirm the item belongs to you, and help you schedule a convenient pickup time.</p>
+    <a class="cta" href="#try">Try the demo</a>
+    <div class="pills">
+      <span class="pill">Retell AI · Conversation Flow</span>
+      <span class="pill">Google Apps Script API</span>
+      <span class="pill">Google Sheets</span>
+      <span class="pill">Cal.com</span>
+    </div>
   </div>
+</header>
 
-  <div class="card">
-    <strong>Other scenarios:</strong> a grey North Face backpack at baggage claim · AirPods at the Plane Train · a red guitar (no match)
+<nav>
+  <div class="wrap">
+    <a href="#usecase">Use case</a>
+    <a href="#how">How it works</a>
+    <a href="#arch">Architecture</a>
+    <a href="#try">Happy path</a>
+    <a href="#errors">Error handling</a>
+    <a href="#future">Future enhancements</a>
   </div>
+</nav>
 
-  <p style="font-size: 0.9em; color: #6b7280;">Demo only. Sample data, not a real airport service.</p>
+<section id="usecase">
+  <div class="wrap">
+    <h2>Use case</h2>
+    <p class="lead">Most lost &amp; found desks rely on phone calls, paper forms and spreadsheets that staff search by hand. This prototype explores how a chat assistant can handle the routine parts of that process, so travelers get answers sooner and staff can focus on the cases that need personal attention.</p>
+    <div class="grid">
+      <div class="card"><h3>Travelers</h3><p>Describe the item in your own words and learn quickly whether it has been turned in.</p></div>
+      <div class="card"><h3>Staff</h3><p>Searching, ownership checks and scheduling are handled by the assistant. Staff step in only when a case needs their judgment.</p></div>
+      <div class="card"><h3>Records</h3><p>Each conversation is recorded with its outcome, giving the desk a clear history of every request.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lead">Finn is built as a conversation flow in Retell AI. Each step has a single purpose, and the backend is called at defined points so the results are consistent.</p>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><b>Greet &amp; intake</b><span>Name, item, color, where, when</span></div>
+      <div class="step"><span class="n">2</span><b>Normalize</b><span>"specs" → eyewear, "yesterday" → date</span></div>
+      <div class="step"><span class="n">3</span><b>Search</b><span>Fuzzy-match unclaimed items</span></div>
+      <div class="step"><span class="n">4</span><b>Confirm</b><span>Describe match with public details only</span></div>
+      <div class="step"><span class="n">5</span><b>Verify</b><span>Owner-only question, checked server-side</span></div>
+      <div class="step"><span class="n">6</span><b>Book</b><span>Live slots from Cal.com</span></div>
+      <div class="step"><span class="n">7</span><b>Log</b><span>Case ID + claim code</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Matching</h3><p>Each found item gets a score out of 100 based on category, color, location, date and keywords. Common synonyms are handled (e.g. "specs" → eyewear, "rucksack" → bag). Up to 3 items scoring 45 or more are returned.</p></div>
+      <div class="card"><h3>Verification</h3><p>Each item has a question only the owner should be able to answer. The answer is checked by the backend, not the AI, and a small difference in wording is accepted. A correct answer generates a claim code.</p></div>
+      <div class="card"><h3>Booking and logging</h3><p>Pickup slots come from Cal.com, which also sends the confirmation email. The case is saved in the Cases tab with the outcome, claim code and pickup time.</p></div>
+      <div class="card"><h3>Post-chat summary</h3><p>When a chat ends, Retell sends a summary and sentiment through a webhook, and these are added to the same case row.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="arch">
+  <div class="wrap">
+    <h2>Architecture</h2>
+    <p class="lead">The prototype runs entirely on free tiers. The assistant does not read the spreadsheet directly; it can only call three actions on the Apps Script backend.</p>
+    <div class="arch">
+      <div class="card"><h3>Retell AI</h3><p>The chat agent, built as a conversation flow with conversation, function and logic-split nodes.</p></div>
+      <div class="card"><h3>Google Apps Script</h3><p>A small web API with <code>search</code>, <code>verify</code> and <code>log</code> actions, plus a webhook for the post-chat summary.</p></div>
+      <div class="card"><h3>Google Sheets</h3><p><b>FoundItems</b> holds the inventory. <b>Cases</b> holds one row per conversation.</p></div>
+      <div class="card"><h3>Cal.com</h3><p>15-minute pickup slots at Guest Services, checked and booked through Retell's Cal.com tools.</p></div>
+    </div>
+    <table style="margin-top:20px">
+      <tr><th>Item status</th><th>Meaning</th><th>Set by</th></tr>
+      <tr><td><code>unclaimed</code></td><td>Available to match</td><td>Staff / setup</td></tr>
+      <tr><td><code>verified_pending_pickup</code></td><td>Owner verified and claim code issued; no longer shown in search</td><td>verify</td></tr>
+      <tr><td><code>locked_review</code></td><td>Three wrong answers; owner has to verify in person</td><td>verify</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="try">
+  <div class="wrap">
+    <h2>Try it: the happy path</h2>
+    <p class="lead">Please click <b>"Lost something?"</b> in the bottom-right corner and follow the steps below. The sample data includes 14 items, such as phones, bags, a wallet, AirPods, a passport and sunglasses.</p>
+    <div class="script">
+      <ol>
+        <li>Share any name, for example <span class="say">Alex</span></li>
+        <li>Say: <span class="say">I lost my black iPhone near gate B12 yesterday, it has a clear case</span></li>
+        <li>Finn describes a match (black phone, Concourse B Gate 12) → reply <span class="say">yes</span></li>
+        <li>Verification question: <i>"What is on your lock screen wallpaper?"</i> → reply <span class="say">a golden retriever</span></li>
+        <li>Provide an email address you can check, then choose one of the offered time slots</li>
+        <li>Finn confirms the pickup and gives you a claim code and case ID. Cal.com sends a confirmation email.</li>
+      </ol>
+    </div>
+    <h3 style="margin-top:28px">More items to try</h3>
+    <table>
+      <tr><th>Say</th><th>Matches</th><th>Verification answer</th></tr>
+      <tr><td>Black Ray-Bans, Concourse D restroom</td><td>Sunglasses</td><td>brown</td></tr>
+      <tr><td>Grey North Face rucksack at baggage claim</td><td>Backpack</td><td>a phone charger</td></tr>
+      <tr><td>White AirPods at the Plane Train</td><td>Headphones</td><td>a black cat</td></tr>
+      <tr><td>Garmin smartwatch, Concourse E Gate 8</td><td>Watch</td><td>step count</td></tr>
+      <tr><td>Black Totes umbrella at the MARTA station</td><td>Umbrella</td><td>polka dots</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="errors">
+  <div class="wrap">
+    <h2>Error conditions &amp; edge cases</h2>
+    <p class="lead">Finn is designed to respond helpfully when a conversation doesn't follow the expected path. You're welcome to try any of the following.</p>
+    <table>
+      <tr><th>Scenario</th><th>Try saying</th><th>What Finn does</th></tr>
+      <tr><td><span class="tag t-warn">No match</span></td><td>"I lost a red guitar"</td><td>Apologizes, asks for an email address and opens a case (<code>no_match</code>) so staff can follow up.</td></tr>
+      <tr><td><span class="tag t-warn">Wrong answer</span></td><td>Answer the verification question incorrectly</td><td>Politely lets you know the answer doesn't match and invites you to try again.</td></tr>
+      <tr><td><span class="tag t-bad">Three wrong answers</span></td><td>Answer incorrectly 3 times</td><td>The item is held for review (<code>locked_review</code>) and you're kindly asked to verify in person with a photo ID.</td></tr>
+      <tr><td><span class="tag t-bad">Asking for details</span></td><td>"What brand is it? What's on the sticker?"</td><td>Courteously declines. To protect the owner, the assistant only receives the category, color, location and date.</td></tr>
+      <tr><td><span class="tag t-warn">Vague item</span></td><td>"A document"</td><td>Asks one clarifying question, such as whether it's a passport, license, ID card or boarding pass.</td></tr>
+      <tr><td><span class="tag t-warn">Unknown location</span></td><td>"I don't remember where"</td><td>Asks one helpful follow-up question, then continues the search without a location.</td></tr>
+      <tr><td><span class="tag t-warn">Slot taken</span></td><td>Pick a slot someone else just booked</td><td>Offers another available slot instead.</td></tr>
+      <tr><td><span class="tag t-ok">Declines pickup</span></td><td>"I don't want to pick it up now"</td><td>Offers to hold the item for 30 days for a walk-in pickup, or to close the case (<code>hold_walk_in</code> / <code>declined</code>).</td></tr>
+      <tr><td><span class="tag t-ok">Gives up</span></td><td>"Not needed" during verification</td><td>Thanks you, explains the in-person option and records the case as <code>abandoned</code>.</td></tr>
+      <tr><td><span class="tag t-bad">Urgent</span></td><td>"I need my passport, my flight is in an hour"</td><td>Recommends visiting Guest Services in person right away.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="future">
+  <div class="wrap">
+    <h2>Future enhancements</h2>
+    <ul>
+      <li><b>Item photos.</b> Store a photo with each found item and show it after the owner passes verification, so they can confirm it's theirs before coming in.</li>
+      <li><b>Report a found item.</b> Let travelers or staff tell the agent about something they found. It would collect the details (type, color, brand, where and when it was found, and a verification question) and add a new row to the FoundItems tab.</li>
+      <li><b>Notify when a match turns up.</b> Email people with open cases when a newly reported item matches their description.</li>
+    </ul>
+    <p style="color:var(--muted);font-size:.92rem">Please note: this is a prototype that uses fictional sample data and is not an actual airport service. Thank you for taking the time to try it.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Built by Sujitha Rao · Retell AI · Google Apps Script · Google Sheets · Cal.com</div>
+</footer>
+
 </body>
 </html>
